@@ -1,0 +1,26 @@
+# ~/.config/starship.toml
+
+format = "$username@$hostname $directory $battery$character"
+
+[username]
+style_user = "bold green"
+show_always = true
+
+[hostname]
+ssh_only = false
+style = "bold yellow"
+
+[directory]
+style = "cyan"
+
+[battery]
+disabled = false
+format = "󰂄 [$percentage]($style) "
+full_symbol = "󰁹 "
+charging_symbol = "󰂄 "
+discharging_symbol = "󰁽 "
+
+[character]
+success_symbol = "[❯](bold purple) "
+error_symbol = "[❯](bold red) "
+
