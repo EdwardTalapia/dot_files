@@ -114,4 +114,114 @@ alias catkin_build="cd ~/catkin && source devel/setup.zsh"
 alias orca_slicer="cd && ./MY_ZSH_SCRIPTS/OPENORCA.zsh"
 alias rusty="cd ~/.cargo"
 alias update_check="check_updates.zsh"
+alias matlab="cd ~/ && /home/edan/EdanPrograms/MatLab/bin/matlab"
+alias ros1-docker="~/MY_ZSH_SCRIPTS/ros_docker/run.sh ros1"
+alias ros2-docker="~/MY_ZSH_SCRIPTS/ros_docker/run.sh ros2"
 
+
+
+# ----- ROS setup -----
+# Order matters: define the use_ros1/use_ros2 switcher first, then pick a
+# default for new shells (ROS2 Humble), THEN register ros2/colcon
+# autocomplete (needs ROS2 already sourced), THEN run ros_env_setup.zsh
+# (domain ID / localhost-only prompts) which reads the env vars use_ros2 set.
+# To switch to ROS1 (ROS-O) in a running shell, just run: use_ros1
+source ~/MY_ZSH_SCRIPTS/ros_switch.zsh
+use_ros2
+echo "Active ROS distro: $ROS_DISTRO (run 'use_ros1' to switch to ROS1/ROS-O)"
+
+eval "$(register-python-argcomplete3 ros2)"
+eval "$(register-python-argcomplete3 colcon)"
+
+cd ~/MY_ZSH_SCRIPTS
+
+./ros_env_setup.zsh
+
+cd ~/
+
+
+# ----- tmux shortcuts -----
+
+alias ta='tmux attach-session'
+alias td='tmux detach'
+alias ts='tmux new-session -s'
+alias tls='tmux list-sessions'
+
+# Fuzzy attach (choose session interactively)
+tfa() {
+    session=$(tmux list-sessions -F '#{session_name}' 2>/dev/null | fzf)
+    [ -n "$session" ] && tmux attach-session -t "$session"
+}
+
+# Fuzzy kill session
+tk() {
+    session=$(tmux list-sessions -F '#{session_name}' 2>/dev/null | fzf)
+    [ -n "$session" ] && tmux kill-session -t "$session"
+}
+
+
+
+# ===== tmux menu (tmenu) =====
+
+# cross-shell read prompt
+_prompt() {
+    # usage: _prompt var "Prompt text"
+    if [ -n "$ZSH_VERSION" ]; then
+        read -r "$1?$2"
+    else
+        read -r -p "$2" "$1"
+    fi
+}
+
+tmenu() {
+    sessions=$(tmux list-sessions -F '#{session_name}' 2>/dev/null)
+
+    opts="New Session"
+    if [ -n "$sessions" ]; then
+        opts="$opts
+Attach Session
+Switch Session
+Kill Session
+Rename Session
+List Sessions"
+    fi
+
+    choice=$(printf "%s\n" "$opts" | fzf --prompt="tmux menu > ")
+
+    case "$choice" in
+        "New Session")
+            _prompt name "New session name: "
+            [ -n "$name" ] && tmux new -s "$name"
+            ;;
+
+        "Attach Session")
+            session=$(echo "$sessions" | fzf --prompt="attach > ")
+            [ -n "$session" ] && tmux attach -t "$session"
+            ;;
+
+        "Switch Session")
+            session=$(echo "$sessions" | fzf --prompt="switch > ")
+            [ -n "$session" ] && tmux switch-client -t "$session"
+            ;;
+
+        "Kill Session")
+            session=$(echo "$sessions" | fzf --prompt="kill > ")
+            if [ -n "$session" ]; then
+                _prompt c "Kill session '$session'? (y/N) "
+                [ "$c" = "y" ] && tmux kill-session -t "$session"
+            fi
+            ;;
+
+        "Rename Session")
+            session=$(echo "$sessions" | fzf --prompt="rename > ")
+            if [ -n "$session" ]; then
+                _prompt new "New name for '$session': "
+                [ -n "$new" ] && tmux rename-session -t "$session" "$new"
+            fi
+            ;;
+
+        "List Sessions")
+            tmux list-sessions
+            ;;
+    esac
+}

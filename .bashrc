@@ -116,3 +116,28 @@ if ! shopt -oq posix; then
   fi
 fi
 . "$HOME/.cargo/env"
+export ROS_DOMAIN_ID=
+export ROS_DOMAIN_ID=
+source /usr/share/colcon_cd/function/colcon_cd.sh
+export _colcon_cd_root=/opt/ros/humble/
+alias ta='tmux attach-session'
+alias td='tmux detach'
+alias ts='tmux new-session -s'
+alias tls='tmux list-sessions'
+
+alias ta='tmux attach-session'
+tfa() {
+    session=$(tmux list-sessions -F '#{session_name}' 2>/dev/null | fzf)
+    [ -n "$session" ] && tmux attach-session -t "$session"
+}
+
+tk() {
+    session=$(tmux list-sessions -F '#{session_name}' 2>/dev/null | fzf)
+    [ -n "$session" ] && tmux kill-session -t "$session"
+}
+
+
+export GAZEBO_PLUGIN_PATH=/opt/ros/humble/lib:$GAZEBO_PLUGIN_PATH
+
+alias ros1-docker="~/MY_ZSH_SCRIPTS/ros_docker/run.sh ros1"
+alias ros2-docker="~/MY_ZSH_SCRIPTS/ros_docker/run.sh ros2"
